@@ -24,27 +24,25 @@ pub struct Application {
 
 impl Application {
     pub fn input(&mut self, event: &WindowEvent) -> bool {
-        match event {
-            WindowEvent::KeyboardInput {
-                input:
-                    KeyboardInput {
-                        state,
-                        virtual_keycode: Some(keycode),
-                        ..
-                    },
-                ..
-            } => {
-                if *state == ElementState::Pressed {
-                    match keycode {
-                        VirtualKeyCode::LBracket => {
-                            self.solution_index = (self.solution_index + 1) % self.solutions.len();
-                            return true;
-                        }
-                        _ => {}
+        if let WindowEvent::KeyboardInput {
+            input:
+                KeyboardInput {
+                    state,
+                    virtual_keycode: Some(keycode),
+                    ..
+                },
+            ..
+        } = event
+        {
+            if *state == ElementState::Pressed {
+                match keycode {
+                    VirtualKeyCode::LBracket => {
+                        self.solution_index = (self.solution_index + 1) % self.solutions.len();
+                        return true;
                     }
+                    _ => {}
                 }
             }
-            _ => {}
         }
 
         self.camera_controller.process_events(event)
@@ -71,7 +69,6 @@ impl Application {
             let offsets = &group.orientations[item.orientation_id];
             let group_offset = item.position;
 
-            // for offset in group.
             for offset in offsets {
                 let position = group_offset + offset;
                 cube_instances.push(CubeInstance {

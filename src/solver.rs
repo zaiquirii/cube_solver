@@ -1,5 +1,3 @@
-use cgmath::InnerSpace;
-
 use crate::cubes;
 
 pub type VolumeDimensions = cgmath::Vector3<i64>;
@@ -163,7 +161,7 @@ fn solve_recursive(
                     });
 
                     if volume.filled() {
-                        if is_new_solution(&solutions, &working_solution) {
+                        if is_new_solution(solutions, working_solution) {
                             solutions.push(working_solution.to_vec());
                         }
                     } else {
@@ -179,7 +177,7 @@ fn solve_recursive(
     }
 }
 
-fn is_new_solution(solutions: &Vec<cubes::Solution>, test: &cubes::Solution) -> bool {
+fn is_new_solution(solutions: &[cubes::Solution], test: &cubes::Solution) -> bool {
     for solution in solutions.iter() {
         if test.iter().all(|test_item| solution.contains(test_item)) {
             return false;

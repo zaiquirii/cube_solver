@@ -30,9 +30,7 @@ impl Camera {
     pub fn projection(&self) -> Matrix4<f32> {
         let view = Matrix4::look_at_rh(self.eye, self.target, self.up);
         let proj = cgmath::perspective(Deg(self.fovy), self.aspect, self.znear, self.zfar);
-        // cgmath::Matrix4::
-        return OPENGL_TO_WGPU_MATRIX * proj * view;
-        // return Matrix4::from_angle_z(cgmath::Deg(90.0)) * proj * view;
+        OPENGL_TO_WGPU_MATRIX * proj * view
     }
 }
 

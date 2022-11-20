@@ -122,7 +122,6 @@ impl Renderer {
         };
         surface.configure(&device, &config);
 
-        use wgpu::util::DeviceExt;
         let shader = device.create_shader_module(include_wgsl!("cube_shader.wgsl"));
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("vertex_buffer"),

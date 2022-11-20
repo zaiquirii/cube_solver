@@ -89,7 +89,7 @@ impl GroupSet {
     }
 }
 
-fn is_new_orientation(orientations: &Vec<Offsets>, test: &Offsets) -> bool {
+fn is_new_orientation(orientations: &[Offsets], test: &Offsets) -> bool {
     /*
        for orientation in orientations:
            o_norm = normalization_offset(orientation)
@@ -98,7 +98,7 @@ fn is_new_orientation(orientations: &Vec<Offsets>, test: &Offsets) -> bool {
 
     */
     let test_norm = normalization_offset(test);
-    for orientation in orientations.iter() {
+    for orientation in orientations {
         let o_norm = normalization_offset(orientation);
 
         // Orientation is the lengths are the same,
