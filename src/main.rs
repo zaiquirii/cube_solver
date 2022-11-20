@@ -26,6 +26,7 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
+use crate::cubes::GroupSet;
 use crate::solver::VolumeDimensions;
 
 #[repr(C)]
@@ -590,21 +591,18 @@ pub async fn run() {
     ];
     group_store.add_group(offsets.as_slice());
     group_store.add_group(&[(0, 0, 0).into(), (1, 0, 0).into()]);
-    // group_store.add_group(&[(0, 0, 0).into(), (1, 0, 0).into()]);
-
-    // group_store.add_group(&[(0, 0, 0).into()]);
-    // group_store.add_group(&[(0, 0, 0).into()]);
-    println!("ORIENTATIONS: {:?}", group_store);
-    let solutions = solver::solve(&group_store, VolumeDimensions::new(3, 2, 1));
-    for solution in solutions {
-        println!("SOLUTIONS: {:?}", solution);
-    }
 
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
     let mut application = application::Application {
+        group_set: group_store,
+        solutions: vec![],
+        solution_index: 0,
         renderer: renderer::Renderer::new(&window).await,
+        camera_controller: camera::CameraController::new(0.1, 4.0),
     };
+
+    application.solve();
 
     event_loop.run(move |event, _, control_flow| match event {
         Event::WindowEvent {

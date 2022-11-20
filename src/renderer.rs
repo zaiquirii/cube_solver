@@ -73,12 +73,17 @@ pub struct Renderer {
 
     render_pipeline: wgpu::RenderPipeline,
     // Bind Groups
-    camera_bind_group: wgpu::BindGroup,
 
     //Buffers
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
     // instance_buffer: wgpu::Buffer,
+
+    // Camera
+    pub camera: camera::Camera,
+    camera_uniform: camera::CameraUniform,
+    camera_buffer: wgpu::Buffer,
+    camera_bind_group: wgpu::BindGroup,
 }
 
 impl Renderer {
@@ -130,9 +135,9 @@ impl Renderer {
             usage: wgpu::BufferUsages::INDEX,
         });
         let camera = camera::Camera {
-            eye: (4.0, 4.0, 4.0).into(),
+            eye: (4.0, 4.0, 2.0).into(),
             target: (0.0, 0.0, 0.0).into(),
-            up: cgmath::Vector3::unit_y(),
+            up: cgmath::Vector3::unit_z(),
             aspect: config.width as f32 / config.height as f32,
             fovy: 45.0,
             znear: 0.1,
@@ -238,10 +243,13 @@ impl Renderer {
             window_size,
 
             render_pipeline,
-            camera_bind_group,
             vertex_buffer,
             index_buffer,
             // instance_buffer,
+            camera,
+            camera_buffer,
+            camera_uniform,
+            camera_bind_group,
         }
     }
 
@@ -254,6 +262,15 @@ impl Renderer {
             // self.depth_texture =
             //     texture::Texture::create_depth_texture(&self.device, &self.config, "depth_texture");
         }
+    }
+
+    pub fn update_camera(&mut self) {
+        self.camera_uniform.update_view_proj(&self.camera);
+        self.queue.write_buffer(
+            &self.camera_buffer,
+            0,
+            bytemuck::cast_slice(&[self.camera_uniform]),
+        );
     }
 
     pub fn render_cubes(
