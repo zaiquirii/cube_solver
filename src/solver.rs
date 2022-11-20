@@ -142,6 +142,8 @@ fn solve_recursive(
 
         // for open_square in volume
         for cube_index in 0..volume.content.len() {
+            // TODO: Only process square if cube_index == 0 (ie the first square we'd ever check)
+            // OR at least ONE of the cubes neighbors is present
             if volume.content[cube_index] {
                 continue;
             }

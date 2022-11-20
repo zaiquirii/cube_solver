@@ -1,4 +1,7 @@
+mod application;
+mod camera;
 mod cubes;
+mod renderer;
 mod solver;
 mod texture;
 
@@ -597,8 +600,53 @@ pub async fn run() {
         println!("SOLUTIONS: {:?}", solution);
     }
 
-    // let event_loop = EventLoop::new();
-    // let window = WindowBuilder::new().build(&event_loop).unwrap();
+    let event_loop = EventLoop::new();
+    let window = WindowBuilder::new().build(&event_loop).unwrap();
+    let mut application = application::Application {
+        renderer: renderer::Renderer::new(&window).await,
+    };
+
+    event_loop.run(move |event, _, control_flow| match event {
+        Event::WindowEvent {
+            ref event,
+            window_id,
+        } if window_id == window.id() => {
+            if !application.input(event) {
+                match event {
+                    WindowEvent::CloseRequested
+                    | WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                state: ElementState::Pressed,
+                                virtual_keycode: Some(VirtualKeyCode::Escape),
+                                ..
+                            },
+                        ..
+                    } => *control_flow = ControlFlow::Exit,
+                    WindowEvent::Resized(physical_size) => {
+                        application.renderer.resize(*physical_size)
+                    }
+                    WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
+                        application.renderer.resize(**new_inner_size)
+                    }
+                    _ => {}
+                }
+            }
+        }
+        Event::RedrawRequested(window_id) if window_id == window.id() => {
+            application.update();
+            match application.render() {
+                Ok(_) => {}
+                Err(wgpu::SurfaceError::Lost) => application
+                    .renderer
+                    .resize(application.renderer.window_size),
+                Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
+                Err(e) => eprintln!("{:?}", e),
+            }
+        }
+        Event::MainEventsCleared => window.request_redraw(),
+        _ => {}
+    });
 
     // let mut state = State::new(&window).await;
 
