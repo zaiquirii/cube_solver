@@ -1,6 +1,6 @@
 use wgpu::{include_wgsl, util::DeviceExt};
 
-use crate::camera;
+use crate::{camera, texture};
 
 /*
 Thoughts on how to structure the renderer.
@@ -77,6 +77,7 @@ pub struct Renderer {
     //Buffers
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
+    depth_texture: texture::Texture,
     // instance_buffer: wgpu::Buffer,
 
     // Camera
@@ -199,6 +200,9 @@ impl Renderer {
         //     array_stride: std::mem::size_of::<Vertex>()
         // }
 
+        let depth_texture =
+            texture::Texture::create_depth_texture(&device, &config, "depth_texture");
+
         let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("render_pipeline"),
             layout: Some(&render_pipeline_layout),
@@ -225,7 +229,13 @@ impl Renderer {
                 unclipped_depth: false,
                 conservative: false,
             },
-            depth_stencil: None,
+            depth_stencil: Some(wgpu::DepthStencilState {
+                format: texture::Texture::DEPTH_FORMAT,
+                depth_write_enabled: true,
+                depth_compare: wgpu::CompareFunction::Less,
+                stencil: wgpu::StencilState::default(),
+                bias: wgpu::DepthBiasState::default(),
+            }),
             multisample: wgpu::MultisampleState {
                 count: 1,
                 mask: !0,
@@ -244,11 +254,11 @@ impl Renderer {
             render_pipeline,
             vertex_buffer,
             index_buffer,
-            // instance_buffer,
             camera,
             camera_buffer,
             camera_uniform,
             camera_bind_group,
+            depth_texture,
         }
     }
 
@@ -258,8 +268,11 @@ impl Renderer {
             self.surface_config.width = new_size.width;
             self.surface_config.height = new_size.height;
             self.surface.configure(&self.device, &self.surface_config);
-            // self.depth_texture =
-            //     texture::Texture::create_depth_texture(&self.device, &self.config, "depth_texture");
+            self.depth_texture = texture::Texture::create_depth_texture(
+                &self.device,
+                &self.surface_config,
+                "depth_texture",
+            );
         }
     }
 
@@ -289,12 +302,6 @@ impl Renderer {
                 usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             });
 
-        // self.queue.write_buffer(
-        //     &self.instance_buffer,
-        //     0,
-        //     bytemuck::cast_slice(instances.as_slice()),
-        // );
-
         let mut encoder = self
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
@@ -316,15 +323,14 @@ impl Renderer {
                         store: true,
                     },
                 })],
-                depth_stencil_attachment: None,
-                // depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                //     view: &self.depth_texture.view,
-                //     depth_ops: Some(wgpu::Operations {
-                //         load: LoadOp::Clear(1.0),
-                //         store: true,
-                //     }),
-                //     stencil_ops: None,
-                // }),
+                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                    view: &self.depth_texture.view,
+                    depth_ops: Some(wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(1.0),
+                        store: true,
+                    }),
+                    stencil_ops: None,
+                }),
             });
             render_pass.set_pipeline(&self.render_pipeline);
             render_pass.set_bind_group(0, &self.camera_bind_group, &[]);

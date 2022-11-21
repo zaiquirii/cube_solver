@@ -53,6 +53,13 @@ impl Application {
             .update_camera(&mut self.renderer.camera);
     }
 
+    pub fn solve(&mut self) {
+        self.solutions = solver::solve(&self.group_set, VolumeDimensions::new(3, 2, 1));
+        for solution in &self.solutions {
+            println!("SOLUTIONS: {:?}", solution);
+        }
+    }
+
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         if self.solutions.is_empty() {
             return Ok(());
@@ -79,12 +86,5 @@ impl Application {
         }
 
         self.renderer.render_cubes(&cube_instances)
-    }
-
-    pub fn solve(&mut self) {
-        self.solutions = solver::solve(&self.group_set, VolumeDimensions::new(3, 2, 1));
-        for solution in &self.solutions {
-            println!("SOLUTIONS: {:?}", solution);
-        }
     }
 }

@@ -3,6 +3,7 @@ mod camera;
 mod cubes;
 mod renderer;
 mod solver;
+mod texture;
 
 use winit::{
     event::*,
