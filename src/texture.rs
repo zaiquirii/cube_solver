@@ -23,7 +23,6 @@ impl Texture {
     // ) -> Result<Self> {
     //     let rgba = img.to_rgba8();
     //     let dimensions = img.dimensions();
-
     //     let size = wgpu::Extent3d {
     //         width: dimensions.0,
     //         height: dimensions.1,

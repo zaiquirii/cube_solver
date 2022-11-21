@@ -22,7 +22,25 @@ pub async fn run() {
         (2, 1, 0).into(),
     ];
     group_store.add_group(offsets.as_slice());
-    group_store.add_group(&[(0, 0, 0).into(), (1, 0, 0).into()]);
+    group_store.add_group(offsets.as_slice());
+    group_store.add_group(offsets.as_slice());
+    group_store.add_group(offsets.as_slice());
+
+    // group_store.add_group(&[(0, 0, 0).into(), (1, 0, 0).into()]);
+
+    group_store.add_group(&[(0, 0, 0).into(), (1, 0, 0).into(), (1, 1, 0).into()]);
+    group_store.add_group(&[
+        (0, 0, 0).into(),
+        (1, 0, 0).into(),
+        (1, 1, 0).into(),
+        (2, 1, 0).into(),
+    ]);
+    group_store.add_group(&[
+        (0, 0, 0).into(),
+        (1, 0, 0).into(),
+        (1, 1, 0).into(),
+        (2, 0, 0).into(),
+    ]);
 
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
@@ -30,6 +48,7 @@ pub async fn run() {
         group_set: group_store,
         solutions: vec![],
         solution_index: 0,
+        piece_index: 0,
         renderer: renderer::Renderer::new(&window).await,
         camera_controller: camera::CameraController::new(0.1, 4.0),
     };

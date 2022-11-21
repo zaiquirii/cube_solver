@@ -80,6 +80,28 @@ impl Volume {
     fn filled(&self) -> bool {
         self.filled_count == self.content.len() as u64
     }
+
+    fn valid_cube(&self, cube_index: usize) -> bool {
+        // While this is a large number of conditionals, it limits the search space to
+        // just the initial position and positions where a neighbor has been filled. 
+        // Taking a 23! to something much smaller like 6! i believe. 
+        let position = self.cube_position(cube_index as u64);
+
+        !self.content[cube_index]
+            && (cube_index == 0
+        // left is filled
+        || (position.x > 0 && self.content[cube_index - 1])
+        // right is filled
+        || (position.x < self.dimensions.x - 1 && self.content[cube_index + 1])
+        // top is failled 
+        || (position.y > 0 && self.content[cube_index - self.dimensions.x as usize])
+        // bottom is filled
+        || (position.y < self.dimensions.y - 1 && self.content[cube_index + self.dimensions.x as usize])
+        // front is filled
+        || (position.z > 0 && self.content[cube_index - (self.dimensions.x * self.dimensions.y) as usize])
+        // back is filled
+        || (position.z < self.dimensions.z - 1 && self.content[cube_index + (self.dimensions.x * self.dimensions.y) as usize]))
+    }
 }
 
 pub fn solve(group_set: &cubes::GroupSet, dims: VolumeDimensions) -> Vec<cubes::Solution> {
@@ -87,6 +109,7 @@ pub fn solve(group_set: &cubes::GroupSet, dims: VolumeDimensions) -> Vec<cubes::
     let mut volume = Volume::new(dims);
     let mut used_groups = vec![0; group_set.groups.len()];
     let mut working_solution = cubes::Solution::new();
+    let mut count = 0;
 
     solve_recursive(
         group_set,
@@ -94,6 +117,7 @@ pub fn solve(group_set: &cubes::GroupSet, dims: VolumeDimensions) -> Vec<cubes::
         &mut used_groups,
         &mut working_solution,
         &mut solutions,
+        &mut count,
     );
     /*
     initialize volume struct
@@ -120,15 +144,14 @@ pub fn solve(group_set: &cubes::GroupSet, dims: VolumeDimensions) -> Vec<cubes::
     solutions
 }
 
-// TODO: Lookup rust enumerate
 fn solve_recursive(
     groups: &cubes::GroupSet,
     volume: &mut Volume,
     used_groups: &mut Vec<u8>,
     working_solution: &mut cubes::Solution,
     solutions: &mut Vec<cubes::Solution>,
+    count: &mut usize,
 ) {
-    println!("Recursive solve");
     // For group in group_set
     for group_id in 0..groups.count() {
         // Skip groups without any instances left
@@ -142,7 +165,7 @@ fn solve_recursive(
         for cube_index in 0..volume.content.len() {
             // TODO: Only process square if cube_index == 0 (ie the first square we'd ever check)
             // OR at least ONE of the cubes neighbors is present
-            if volume.content[cube_index] {
+            if !volume.valid_cube(cube_index) {
                 continue;
             }
 
@@ -160,13 +183,25 @@ fn solve_recursive(
                         position,
                     });
 
+                    *count += 1;
+                    if *count % 10000 == 0 {
+                        println!("attempt: {}", count);
+                    }
+
                     if volume.filled() {
                         if is_new_solution(solutions, working_solution) {
                             solutions.push(working_solution.to_vec());
                         }
                     } else {
                         used_groups[group_id] += 1;
-                        solve_recursive(groups, volume, used_groups, working_solution, solutions);
+                        solve_recursive(
+                            groups,
+                            volume,
+                            used_groups,
+                            working_solution,
+                            solutions,
+                            count,
+                        );
                         used_groups[group_id] -= 1;
                     }
                     working_solution.pop();

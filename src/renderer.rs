@@ -196,10 +196,6 @@ impl Renderer {
             attributes: &wgpu::vertex_attr_array![1=>Float32x3, 2=>Float32x3],
         };
 
-        // let instance_desc = wgpu::VertexBufferLayout {
-        //     array_stride: std::mem::size_of::<Vertex>()
-        // }
-
         let depth_texture =
             texture::Texture::create_depth_texture(&device, &config, "depth_texture");
 

@@ -18,6 +18,7 @@ pub struct Application {
     pub group_set: cubes::GroupSet,
     pub solutions: Vec<cubes::Solution>,
     pub solution_index: usize,
+    pub piece_index: usize,
     pub renderer: renderer::Renderer,
     pub camera_controller: camera::CameraController,
 }
@@ -40,6 +41,20 @@ impl Application {
                         self.solution_index = (self.solution_index + 1) % self.solutions.len();
                         return true;
                     }
+                    VirtualKeyCode::RBracket => {
+                        self.solution_index = (self.solution_index - 1) % self.solutions.len();
+                        return true;
+                    }
+                    VirtualKeyCode::Equals => {
+                        self.piece_index += 1;
+                        return true;
+                    }
+                    VirtualKeyCode::Minus => {
+                        if self.piece_index > 0 {
+                            self.piece_index -= 1;
+                        }
+                        return true;
+                    }
                     _ => {}
                 }
             }
@@ -54,10 +69,8 @@ impl Application {
     }
 
     pub fn solve(&mut self) {
-        self.solutions = solver::solve(&self.group_set, VolumeDimensions::new(3, 2, 1));
-        for solution in &self.solutions {
-            println!("SOLUTIONS: {:?}", solution);
-        }
+        self.solutions = solver::solve(&self.group_set, VolumeDimensions::new(3, 3, 3));
+        println!("SOLUTION COUNT: {:?}", self.solutions.len());
     }
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -70,12 +83,18 @@ impl Application {
         let mut cube_instances = Vec::new();
 
         let solution = &self.solutions[self.solution_index];
-        for (index, item) in solution.iter().enumerate() {
+        for (index, item) in solution
+            .iter()
+            .take(self.piece_index % solution.len() + 1)
+            .enumerate()
+        {
             let color = PIECE_COLORS[index % PIECE_COLORS.len()];
             let group = self.group_set.get_by_id(item.group_id);
             let offsets = &group.orientations[item.orientation_id];
             let group_offset = item.position;
 
+            // for i in 0..(self.piece_index % offsets.len()) {
+            //     let offset = offsets[i];
             for offset in offsets {
                 let position = group_offset + offset;
                 cube_instances.push(CubeInstance {
