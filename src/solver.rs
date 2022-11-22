@@ -83,8 +83,8 @@ impl Volume {
 
     fn valid_cube(&self, cube_index: usize) -> bool {
         // While this is a large number of conditionals, it limits the search space to
-        // just the initial position and positions where a neighbor has been filled. 
-        // Taking a 23! to something much smaller like 6! i believe. 
+        // just the initial position and positions where a neighbor has been filled.
+        // Taking a 23! to something much smaller like 6! i believe.
         let position = self.cube_position(cube_index as u64);
 
         !self.content[cube_index]
